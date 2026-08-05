@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FcGoogle } from "react-icons/fc";
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signInWithPopup 
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  onAuthStateChanged,
 } from "firebase/auth";
+import { useNavigate, useLocation } from "react-router-dom";
 import { auth, googleProvider } from "../firebase";
 
 const PageBox = styled.div`
@@ -190,10 +192,22 @@ const RegisterButton = styled.button`
 `;
 
 export const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser && location.pathname === '/auth') {
+        navigate('/home');
+      }
+    });
+    return unsubscribe;
+  }, [navigate, location]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,6 +215,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      navigate("/home", { state: { from: 'login' } });
     } catch (err: any) {
       setError(err.message || "Помилка при вході");
     } finally {
@@ -217,6 +232,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
+      navigate("/home", { state: { from: 'register' } });
     } catch (err: any) {
       setError(err.message || "Помилка при реєстрації");
     } finally {
@@ -229,6 +245,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
+      navigate("/home", { state: { from: 'google' } });
     } catch (err: any) {
       setError(err.message || "Помилка при вході через Google");
     } finally {

@@ -1,22 +1,18 @@
 
 import React from 'react'
-import { Header } from './components/Header/Header.tsx';
-import { LoginPage } from './pages/LoginPage.tsx';
-
-
-
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { LoginPage } from './pages/LoginPage.tsx'
+import Home from './pages/Home.tsx'
 const App: React.FC = () => {
-  
-  const currentUser = "Олександр"
-
   return (
-    <>
-     <div>
-      {/* Передаємо ім'я у ваш хедер */}
-      <Header userName={currentUser} />
-      <LoginPage />
-    </div>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/auth" replace />} />
+        <Route path="/auth" element={<LoginPage />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="*" element={<Navigate to="/auth" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
