@@ -195,9 +195,7 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const navigate = useNavigate();
-
-  const location = useLocation();
+  const location = useLocation();6
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
