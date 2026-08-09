@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FcGoogle } from "react-icons/fc";
 import {
-  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signInWithPopup,
+  onAuthStateChanged,
 } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { auth, googleProvider } from "../firebase";
 import { Header } from "../components/Header/Header";
 
@@ -187,34 +188,8 @@ const RegisterButton = styled.button`
   }
 `;
 
-const ErrorMessage = styled.p`
-  color: #e53e3e;
-  font-size: 13px;
-  text-align: center;
-  margin: 10px 0 0 0;
-`;
-
-const SuccessMessage = styled.p`
-  color: #38a169;
-  font-size: 13px;
-  text-align: center;
-  margin: 10px 0 0 0;
-`;
-
-type FirebaseAuthError = {
-  code?: string;
-  message?: string;
-};
-
-const getFirebaseAuthError = (error: unknown): FirebaseAuthError => {
-  if (typeof error === "object" && error !== null) {
-    return error as FirebaseAuthError;
-  }
-
-  return { message: String(error) };
-};
-
-const LoginPage: React.FC = () => {
+export const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -222,7 +197,18 @@ const LoginPage: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
-    const handleLogin = async (e: React.FormEvent) => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser && location.pathname === '/auth') {
+        navigate('/home');
+      }
+    });
+    return unsubscribe;
+  }, [navigate, location]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setMessage(null);
@@ -230,25 +216,9 @@ const LoginPage: React.FC = () => {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      setMessage("Успішний вхід!");
-      navigate("/home");
-    } catch (err: unknown) {
-      const firebaseError = getFirebaseAuthError(err);
-
-      if (
-        firebaseError.code === "auth/invalid-credential" ||
-        firebaseError.code === "auth/user-not-found" ||
-        firebaseError.code === "auth/wrong-password"
-      ) {
-        setError("Невірний email або пароль.");
-      } else if (firebaseError.code === "auth/invalid-email") {
-        setError("Некоректний формат email.");
-      } else {
-        setError(
-          "Помилка входу: " +
-            (firebaseError.message || "Неочікувана помилка.")
-        );
-      }
+      navigate("/home", { state: { from: 'login' } });
+    } catch (err: any) {
+      setError(err.message || "Помилка при вході");
     } finally {
       setLoading(false);
     }
@@ -266,23 +236,9 @@ const LoginPage: React.FC = () => {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      setMessage("Реєстрація успішна! Ви авторизовані.");
-      navigate("/home");
-    } catch (err: unknown) {
-      const firebaseError = getFirebaseAuthError(err);
-
-      if (firebaseError.code === "auth/email-already-in-use") {
-        setError("Користувач з таким email вже існує.");
-      } else if (firebaseError.code === "auth/weak-password") {
-        setError("Пароль має містити щонайменше 6 символів.");
-      } else if (firebaseError.code === "auth/invalid-email") {
-        setError("Некоректний формат email.");
-      } else {
-        setError(
-          "Помилка реєстрації: " +
-            (firebaseError.message || "Неочікувана помилка.")
-        );
-      }
+      navigate("/home", { state: { from: 'register' } });
+    } catch (err: any) {
+      setError(err.message || "Помилка при реєстрації");
     } finally {
       setLoading(false);
     }
@@ -295,15 +251,9 @@ const LoginPage: React.FC = () => {
 
     try {
       await signInWithPopup(auth, googleProvider);
-      setMessage("Успішний вхід через Google!");
-      navigate("/home");
-    } catch (err: unknown) {
-      const firebaseError = getFirebaseAuthError(err);
-
-      setError(
-        "Помилка авторизації через Google: " +
-          (firebaseError.message || "Неочікувана помилка.")
-      );
+      navigate("/home", { state: { from: 'google' } });
+    } catch (err: any) {
+      setError(err.message || "Помилка при вході через Google");
     } finally {
       setLoading(false);
     }

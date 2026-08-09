@@ -1,20 +1,19 @@
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
-const Home = lazy(() => import("./pages/Home"));
-const LoginPage = lazy(() => import("./pages/LoginPage"));
+
+import React from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { LoginPage } from './pages/LoginPage.tsx'
+import Home from './pages/Home.tsx'
 const App: React.FC = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/auth" />} />
+        <Route path="/" element={<Navigate to="/auth" replace />} />
         <Route path="/auth" element={<LoginPage />} />
-        {/* <Route element={<PrivateRoute />}> */}
-          <Route path="/home" element={<Home />} />
-        {/* </Route> */}
+        <Route path="/home" element={<Home />} />
+        <Route path="*" element={<Navigate to="/auth" replace />} />
       </Routes>
-    </Suspense>
-  );
-};
+    </BrowserRouter>
+  )
+}
 
 export default App;
